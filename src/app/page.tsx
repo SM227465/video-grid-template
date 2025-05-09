@@ -1,11 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import type { Video } from "@/types/video";
 import { VideoCard } from "@/components/video/video-card";
-import { VideoPlayerModal } from "@/components/video/video-player-modal";
 import { Button } from "@/components/ui/button";
-import { Loader2, ListFilter, WifiOff } from "lucide-react";
+import { ListFilter, WifiOff } from "lucide-react";
 import { recommendVideos, RecommendVideosInput } from '@/ai/flows/video-recommendations';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,60 +14,56 @@ import { Skeleton } from '@/components/ui/skeleton';
 const mockVideos: Video[] = Array.from({ length: 12 }, (_, i) => ({
   id: `video${i + 1}`,
   title: `Awesome Video Title ${i + 1} - A Great Adventure`,
-  description: `This is a detailed description for Awesome Video Title ${i + 1}. It covers various aspects of the topic and provides valuable insights. Enjoy watching! This content is for demonstration purposes. More details about the video are included to make the description longer. It's a really fantastic video that you will surely enjoy. Learn new things and expand your knowledge.`,
+  description: `This is a detailed description for Awesome Video Title ${i + 1}. It covers various aspects of the topic and provides valuable insights. Enjoy watching! This content is for demonstration purposes. More details about the video are included to make the description longer. It's a really fantastic video that you will surely enjoy. Learn new things and expand your knowledge. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This is a sample description for video ${i + 1}. We explore exciting topics and share knowledge.`,
   thumbnailUrl: `https://picsum.photos/seed/${i + 1}/400/225`,
-  videoUrl: `https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`, // Placeholder
-  previewVideoUrl: `https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`, // Placeholder preview
-  duration: Math.floor(Math.random() * 1800) + 300, // 5 to 30 minutes
-  tags: ["tutorial", "tech", "nextjs", "code", "funny", "gaming", "music"].sort(() => 0.5 - Math.random()).slice(0, 3),
-  quality: ["1080p", "720p"],
-  uploadDate: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30), // Random date in last 30 days
+  videoUrl: `https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`, 
+  previewVideoUrl: `https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`,
+  duration: Math.floor(Math.random() * 1800) + 300, 
+  tags: ["tutorial", "tech", "nextjs", "code", "funny", "gaming", "music", "lifestyle", "travel", "vlog"].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 2),
+  quality: ["1080p", "720p", "480p"].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1) as Video["quality"],
+  uploadDate: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30), 
   uploader: {
     id: `user${i % 3 + 1}`,
     name: ["TechGuru", "CodeMaster", "FunnyVids"][i % 3],
     avatarUrl: `https://avatar.vercel.sh/user${i % 3 + 1}.png`,
   },
-  views: Math.floor(Math.random() * 100000) + 1000,
-  likes: Math.floor(Math.random() * 5000) + 100,
-  dislikes: Math.floor(Math.random() * 200) + 10,
-  comments: Array.from({ length: Math.floor(Math.random() * 5) + 1 }, (_, j) => ({
+  views: Math.floor(Math.random() * 1000000) + 1000,
+  likes: Math.floor(Math.random() * 50000) + 100,
+  dislikes: Math.floor(Math.random() * 2000) + 10,
+  comments: Array.from({ length: Math.floor(Math.random() * 15) + 1 }, (_, j) => ({
     id: `comment${i}-${j}`,
-    userId: `commenter${j}`,
-    userName: `User ${j + 1}`,
-    userAvatar: `https://avatar.vercel.sh/commenter${j}.png`,
-    text: `This is a great video! Thanks for sharing. Comment ${j+1}`,
-    timestamp: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24),
-    likes: Math.floor(Math.random() * 50),
-    dislikes: Math.floor(Math.random() * 5),
+    userId: `commenter${j % 5 + 1}`,
+    userName: `User ${j % 5 + 1}`,
+    userAvatar: `https://avatar.vercel.sh/commenter${j % 5 + 1}.png`,
+    text: `This is a great video! Thanks for sharing. Comment ${j+1}. Really insightful and well-made. Looking forward to more content like this from you. Keep up the good work!`,
+    timestamp: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * (j + 1)),
+    likes: Math.floor(Math.random() * 150),
+    dislikes: Math.floor(Math.random() * 20),
   })),
-  isPaid: i % 4 === 0, // Every 4th video is paid
+  isPaid: i % 4 === 0,
 }));
 
 
 export default function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [recommendedVideosList, setRecommendedVideosList] = useState<Video[]>([]);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
-  const { userRole, isAuthenticated } = useAuth(); // Using mock watch history for demo
-  const mockUserWatchHistory = ['video1', 'video3']; // Example video IDs
+  const { userRole, isAuthenticated } = useAuth(); 
+  const mockUserWatchHistory = ['video1', 'video3']; 
 
   useEffect(() => {
-    // Simulate API call
     setTimeout(() => {
       setVideos(mockVideos);
       setIsLoading(false);
     }, 1500);
 
-    // Check online status
     const updateOnlineStatus = () => setIsOnline(navigator.onLine);
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus(); // Initial check
+    updateOnlineStatus(); 
 
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
@@ -77,13 +73,13 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && videos.length > 0) {
+    if (isAuthenticated && videos.length > 0 && isOnline) {
       fetchRecommendations();
     } else {
-      setRecommendedVideosList([]); // Clear recommendations if not authenticated or no videos
+      setRecommendedVideosList([]); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, videos, userRole]);
+  }, [isAuthenticated, videos, userRole, isOnline]);
 
 
   const fetchRecommendations = async () => {
@@ -102,21 +98,10 @@ export default function Home() {
       setRecommendedVideosList(recommended);
     } catch (error) {
       console.error("Error fetching recommendations:", error);
-      setRecommendedVideosList([]); // Fallback to empty or show an error
+      setRecommendedVideosList([]); 
     } finally {
       setIsRecommendationsLoading(false);
     }
-  };
-
-
-  const handlePlayVideo = (video: Video) => {
-    setSelectedVideo(video);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedVideo(null);
   };
 
   if (!isOnline) {
@@ -135,8 +120,8 @@ export default function Home() {
         <div key={index} className="flex flex-col space-y-3">
           <Skeleton className="h-[225px] w-full rounded-xl" />
           <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-4 w-full max-w-[250px]" />
+            <Skeleton className="h-4 w-full max-w-[200px]" />
           </div>
         </div>
       ))}
@@ -167,7 +152,7 @@ export default function Home() {
               <h2 className="text-2xl font-semibold mb-4">Recommended For You</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {recommendedVideosList.map((video) => (
-                  <VideoCard key={video.id} video={video} onPlay={handlePlayVideo} />
+                  <VideoCard key={video.id} video={video} />
                 ))}
               </div>
               <hr className="my-8"/>
@@ -178,7 +163,7 @@ export default function Home() {
           {videos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {videos.map((video) => (
-                <VideoCard key={video.id} video={video} onPlay={handlePlayVideo} />
+                <VideoCard key={video.id} video={video} />
               ))}
             </div>
           ) : (
@@ -186,19 +171,6 @@ export default function Home() {
           )}
         </>
       )}
-
-      {selectedVideo && (
-        <VideoPlayerModal
-          video={selectedVideo}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
-      )}
-
-      {/* Placeholder for pagination or infinite scroll */}
-      {/* <div className="mt-8 flex justify-center">
-        <Button variant="outline">Load More</Button>
-      </div> */}
     </div>
   );
 }
