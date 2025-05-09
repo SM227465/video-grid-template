@@ -1,7 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Clapperboard, Search, UserCircle, LogIn, LogOut, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,18 +19,23 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initiateUPIPayment, UPIPaymentStatus } from '@/services/upi-payment';
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 
 
 export function Header() {
   const { isAuthenticated, userRole, userName, setUserRole, logout } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const noContainerRoutes = ['/login', '/signup'];
+  // On login/signup pages, we don't use the container for header content,
+  // and simplify the header by hiding search and sidebar trigger.
+  const useContainerAndFullFeatures = !noContainerRoutes.includes(pathname);
 
   const handleLogout = () => {
     logout();
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push('/'); // Optional: redirect to home on logout
+    router.push('/'); 
   };
 
   const handleUpgrade = async () => {
@@ -48,7 +53,7 @@ export function Header() {
       toast({ title: "Processing Payment...", description: "Please wait while we process your UPI payment." });
       const result = await initiateUPIPayment(paymentDetails);
       if (result.status === UPIPaymentStatus.SUCCESS) {
-        setUserRole("paid_user", userName || "Premium User"); // Preserve username or set default
+        setUserRole("paid_user", userName || "Premium User");
         toast({ title: "Payment Successful!", description: "Welcome to VidShare Premium!" });
       } else {
         toast({ variant: "destructive", title: "Payment Failed", description: result.message || "Unable to process payment." });
@@ -61,29 +66,33 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+      <div className={useContainerAndFullFeatures ? "container flex h-16 items-center justify-between" : "flex h-16 items-center justify-between px-4 md:px-6"}>
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="md:hidden" />
+          {useContainerAndFullFeatures && <SidebarTrigger className="md:hidden" />}
           <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-xl">
             <Clapperboard className="h-6 w-6 text-primary" />
             <span className="hidden sm:inline">VidShare</span>
           </Link>
         </div>
 
-        <div className="flex-1 max-w-md mx-4 hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input type="search" placeholder="Search videos..." className="pl-10 w-full rounded-full" />
+        {useContainerAndFullFeatures && (
+          <div className="flex-1 max-w-md mx-4 hidden md:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input type="search" placeholder="Search videos..." className="pl-10 w-full rounded-full" />
+            </div>
           </div>
-        </div>
+        )}
         
         <div className="flex items-center gap-3">
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
-            </Button>
-          </div>
+          {useContainerAndFullFeatures && (
+            <div className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+              </Button>
+            </div>
+          )}
           <ThemeToggleButton />
           {isAuthenticated ? (
             <DropdownMenu>
@@ -105,7 +114,7 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/profile')}> {/* Placeholder for profile page */}
+                <DropdownMenuItem onClick={() => router.push('/profile')}> 
                   <UserCircle className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -131,12 +140,14 @@ export function Header() {
           )}
         </div>
       </div>
-       <div className="md:hidden px-4 pb-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input type="search" placeholder="Search videos..." className="pl-10 w-full rounded-full" />
+       {useContainerAndFullFeatures && (
+        <div className="md:hidden px-4 pb-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input type="search" placeholder="Search videos..." className="pl-10 w-full rounded-full" />
+            </div>
           </div>
-        </div>
+        )}
     </header>
   );
 }
