@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center p-4">
+    <div className="flex h-full flex-col items-center justify-center">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight">Create an Account</CardTitle>
@@ -24,3 +24,4 @@ export default function SignupPage() {
     </div>
   );
 }
+
