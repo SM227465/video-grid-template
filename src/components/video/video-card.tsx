@@ -5,18 +5,14 @@ import type { Video } from "@/types/video";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { PlayCircle, Eye, ThumbsUp, MessageSquare, Clock, Film } from "lucide-react";
+import { PlayCircle, Eye, ThumbsUp, MessageSquare, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatNumber, formatDuration } from "@/lib/utils";
 
 interface VideoCardProps {
   video: Video;
 }
-
-const tagsToFilter = ['music', 'code', 'nextjs'];
-const qualityToFilter = ['1080p', '720p'];
 
 export function VideoCard({ video }: VideoCardProps) {
   const [isHovering, setIsHovering] = useState(false);
@@ -32,9 +28,6 @@ export function VideoCard({ video }: VideoCardProps) {
       }
     }
   }, [isHovering, video.previewVideoUrl]);
-
-  const displayTags = video.tags.filter(tag => !tagsToFilter.includes(tag.toLowerCase())).slice(0, 3);
-  const displayQualities = video.quality.filter(q => !qualityToFilter.includes(q.toLowerCase()));
 
   return (
     <Link href={`/video/${video.id}`} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg h-full">
@@ -71,7 +64,6 @@ export function VideoCard({ video }: VideoCardProps) {
                 <Clock className="w-3 h-3 mr-1" />
                 {formatDuration(video.duration)}
               </Badge>
-              {video.isPaid && <Badge variant="destructive" className="text-xs py-1 px-2"><Film className="w-3 h-3 mr-1" /> Premium</Badge>}
             </div>
           </div>
           {isHovering && !video.previewVideoUrl && ( // Show play icon on hover if no preview video
@@ -85,29 +77,12 @@ export function VideoCard({ video }: VideoCardProps) {
             <CardTitle className="text-lg font-semibold leading-tight mb-2 truncate group-hover:text-primary transition-colors">
               {video.title}
             </CardTitle>
-            <div className="flex items-center text-sm text-muted-foreground mb-2">
-              <Avatar className="w-6 h-6 mr-2">
-                <AvatarImage src={video.uploader.avatarUrl || `https://avatar.vercel.sh/${video.uploader.name}.png`} alt={video.uploader.name} />
-                <AvatarFallback>{video.uploader.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span>{video.uploader.name}</span>
-            </div>
             <div className="flex items-center text-xs text-muted-foreground space-x-3">
-              <span className="flex items-center"><Eye className="w-3 h-3 mr-1" /> {formatNumber(video.views)} views</span>
+              <span className="flex items-center"><Eye className="w-3 h-3 mr-1" /> {formatNumber(video.views)}</span>
               <span className="flex items-center"><ThumbsUp className="w-3 h-3 mr-1" /> {formatNumber(video.likes)}</span>
               <span className="flex items-center"><MessageSquare className="w-3 h-3 mr-1" /> {formatNumber(video.comments.length)}</span>
             </div>
           </div>
-          {(displayTags.length > 0 || displayQualities.length > 0) && (
-            <div className="mt-3 flex flex-wrap gap-1">
-              {displayTags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-              ))}
-              {displayQualities.map((q) => (
-                <Badge key={q} variant="secondary" className="text-xs">{q}</Badge>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
     </Link>
