@@ -1,3 +1,7 @@
+// "use client" directive will be added by the bundler or transpiler if necessary for usePathname
+// For now, let's assume it's managed by Next.js's app router conventions for layouts
+// If direct client hooks are used, then "use client" would be needed at the top.
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -7,6 +11,8 @@ import { Header } from '@/components/layout/header';
 import { AppSidebar } from '@/components/layout/sidebar';
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { ClientLayout } from '@/components/layout/client-layout';
+
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -39,17 +45,9 @@ export default function RootLayout({
         >
           <AuthProvider>
             <SidebarProvider>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <div className="flex flex-1">
-                  <AppSidebar />
-                  <SidebarInset>
-                    <main className="flex-1 p-4 md:p-6 lg:p-8">
-                      {children}
-                    </main>
-                  </SidebarInset>
-                </div>
-              </div>
+              <ClientLayout>
+                {children}
+              </ClientLayout>
             </SidebarProvider>
             <Toaster />
           </AuthProvider>
