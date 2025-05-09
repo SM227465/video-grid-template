@@ -1,6 +1,6 @@
 "use client";
 
-import type { Video } from "@/types/video";
+import type { Video, VideoComment } from "@/types/video";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { formatNumber } from "@/lib/utils";
 
 interface VideoPlayerModalProps {
   video: Video | null;
@@ -17,28 +18,22 @@ interface VideoPlayerModalProps {
   onClose: () => void;
 }
 
-export function VideoPlayerModal({ video, isOpen, onClose }: VideoPlayerModalProps) {
+export function VideoPlayerModal({ video: initialVideo, isOpen, onClose }: VideoPlayerModalProps) {
+  const [video, setVideo] = useState<Video | null>(initialVideo);
   const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState(video?.comments || []);
+  const [comments, setComments] = useState<VideoComment[]>(initialVideo?.comments || []);
+
+  useEffect(() => {
+    setVideo(initialVideo);
+    setComments(initialVideo?.comments || []);
+  }, [initialVideo]);
+
 
   if (!video) return null;
 
-  const formatDuration = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return [
-      h > 0 ? h : null,
-      m.toString().padStart(2, "0"),
-      s.toString().padStart(2, "0"),
-    ]
-      .filter(Boolean)
-      .join(":");
-  };
-
   const handleAddComment = () => {
     if (newComment.trim()) {
-      const comment = {
+      const comment: VideoComment = {
         id: String(Date.now()),
         userId: "currentUser", // Replace with actual user ID
         userName: "Current User", // Replace with actual user name
@@ -65,7 +60,7 @@ export function VideoPlayerModal({ video, isOpen, onClose }: VideoPlayerModalPro
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold">{video.title}</DialogTitle>
                 <DialogDescription className="mt-1 text-sm text-muted-foreground">
-                  <span className="flex items-center"><Eye className="w-4 h-4 mr-1.5" /> {video.views.toLocaleString()} views</span>
+                  <span className="flex items-center"><Eye className="w-4 h-4 mr-1.5" /> {formatNumber(video.views)} views</span>
                   <span className="flex items-center ml-3"><Clock className="w-4 h-4 mr-1.5" /> Uploaded on {new Date(video.uploadDate).toLocaleDateString()}</span>
                 </DialogDescription>
               </DialogHeader>
@@ -84,10 +79,10 @@ export function VideoPlayerModal({ video, isOpen, onClose }: VideoPlayerModalPro
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="sm" className="flex items-center">
-                    <ThumbsUp className="w-4 h-4 mr-1.5" /> {video.likes.toLocaleString()}
+                    <ThumbsUp className="w-4 h-4 mr-1.5" /> {formatNumber(video.likes)}
                   </Button>
                   <Button variant="ghost" size="sm" className="flex items-center">
-                    <ThumbsDown className="w-4 h-4 mr-1.5" /> {video.dislikes.toLocaleString()}
+                    <ThumbsDown className="w-4 h-4 mr-1.5" /> {formatNumber(video.dislikes)}
                   </Button>
                   <Button variant="ghost" size="sm" className="flex items-center">
                     <Share2 className="w-4 h-4 mr-1.5" /> Share
@@ -116,7 +111,7 @@ export function VideoPlayerModal({ video, isOpen, onClose }: VideoPlayerModalPro
             <div className="p-4 border-b">
               <h3 className="text-lg font-semibold flex items-center">
                 <MessageSquare className="w-5 h-5 mr-2" />
-                Comments ({comments.length})
+                Comments ({formatNumber(comments.length)})
               </h3>
             </div>
             <ScrollArea className="flex-1 h-[calc(100vh-300px)] md:h-auto"> {/* Adjust height as needed */}
@@ -128,11 +123,11 @@ export function VideoPlayerModal({ video, isOpen, onClose }: VideoPlayerModalPro
                       <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold">{comment.userName} <span className="text-xs text-muted-foreground ml-1">{new Date(comment.timestamp).toLocaleTimeString()}</span></p>
+                      <p className="text-sm font-semibold">{comment.userName} <span className="text-xs text-muted-foreground ml-1">{new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></p>
                       <p className="text-sm">{comment.text}</p>
                        <div className="flex items-center space-x-2 mt-1 text-xs text-muted-foreground">
                         <Button variant="ghost" size="icon" className="h-6 w-6"><ThumbsUp className="w-3 h-3" /></Button>
-                        <span>{comment.likes}</span>
+                        <span>{formatNumber(comment.likes)}</span>
                         <Button variant="ghost" size="icon" className="h-6 w-6"><ThumbsDown className="w-3 h-3" /></Button>
                       </div>
                     </div>

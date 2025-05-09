@@ -3,13 +3,14 @@
 import type { Video } from "@/types/video";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { PlayCircle, Eye, ThumbsUp, MessageSquare, Clock, Film, XCircle } from "lucide-react";
+import { PlayCircle, Eye, ThumbsUp, MessageSquare, Clock, Film } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { formatNumber } from "@/lib/utils";
 
 interface VideoCardProps {
   video: Video;
@@ -120,9 +121,9 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
           <span>{video.uploader.name}</span>
         </div>
         <div className="flex items-center text-xs text-muted-foreground space-x-3">
-          <span className="flex items-center"><Eye className="w-3 h-3 mr-1" /> {video.views.toLocaleString()} views</span>
-          <span className="flex items-center"><ThumbsUp className="w-3 h-3 mr-1" /> {video.likes.toLocaleString()}</span>
-          <span className="flex items-center"><MessageSquare className="w-3 h-3 mr-1" /> {video.comments.length}</span>
+          <span className="flex items-center"><Eye className="w-3 h-3 mr-1" /> {formatNumber(video.views)} views</span>
+          <span className="flex items-center"><ThumbsUp className="w-3 h-3 mr-1" /> {formatNumber(video.likes)}</span>
+          <span className="flex items-center"><MessageSquare className="w-3 h-3 mr-1" /> {formatNumber(video.comments.length)}</span>
         </div>
         <div className="mt-2 flex flex-wrap gap-1">
           {video.tags.slice(0, 3).map((tag) => (
