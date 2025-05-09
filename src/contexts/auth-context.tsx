@@ -1,15 +1,17 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
-import { createContext, useState, useMemo } from 'react';
+import { createContext, useState, useMemo, useCallback } from 'react';
 
 export type UserRole = "guest" | "free_user" | "paid_user";
 
 interface AuthContextType {
   userRole: UserRole;
-  setUserRole: (role: UserRole) => void;
+  setUserRole: (role: UserRole, name?: string) => void;
   isAuthenticated: boolean;
   userName: string | null;
+  logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,28 +21,38 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps): ReactNode {
-  const [userRole, setUserRole] = useState<UserRole>("guest");
-  const [userName, setUserName] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole>("guest");
+  const [currentUserName, setCurrentUserName] = useState<string | null>(null);
 
-  const isAuthenticated = useMemo(() => userRole !== "guest", [userRole]);
+  const isAuthenticated = useMemo(() => currentUserRole !== "guest", [currentUserRole]);
 
-  // Mock login/logout functions can be added here later
-  // For now, role can be changed directly for demonstration
+  const handleSetUserRole = useCallback((role: UserRole, name?: string) => {
+    setCurrentUserRole(role);
+    if (role === "guest") {
+      setCurrentUserName(null);
+    } else {
+      // If a name is provided, use it. Otherwise, use existing or default.
+      if (name) {
+        setCurrentUserName(name);
+      } else if (currentUserName === null) { // Only set default if no name exists
+        setCurrentUserName(role === "paid_user" ? "Premium User" : "VidShare User");
+      }
+      // If name is not provided and currentUserName is already set, keep it.
+    }
+  }, [currentUserName]);
+
+  const handleLogout = useCallback(() => {
+    setCurrentUserRole("guest");
+    setCurrentUserName(null);
+  }, []);
 
   const value = useMemo(() => ({
-    userRole,
-    setUserRole: (role: UserRole) => {
-      setUserRole(role);
-      if (role === "guest") {
-        setUserName(null);
-      } else if (userName === null) {
-        // Simulate login with a generic name
-        setUserName(role === "paid_user" ? "Premium User" : "VidShare User");
-      }
-    },
+    userRole: currentUserRole,
+    setUserRole: handleSetUserRole,
     isAuthenticated,
-    userName
-  }), [userRole, isAuthenticated, userName]);
+    userName: currentUserName,
+    logout: handleLogout,
+  }), [currentUserRole, handleSetUserRole, isAuthenticated, currentUserName, handleLogout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

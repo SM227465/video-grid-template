@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -18,22 +19,18 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initiateUPIPayment, UPIPaymentStatus } from '@/services/upi-payment';
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 
 export function Header() {
-  const { isAuthenticated, userRole, userName, setUserRole } = useAuth();
+  const { isAuthenticated, userRole, userName, setUserRole, logout } = useAuth();
   const { toast } = useToast();
-
-  const handleLogin = () => {
-    // Mock login: cycle through roles for demo
-    if (userRole === "guest") setUserRole("free_user");
-    else if (userRole === "free_user") setUserRole("paid_user");
-    else setUserRole("guest");
-  };
+  const router = useRouter();
 
   const handleLogout = () => {
-    setUserRole("guest");
-     toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    logout();
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    router.push('/'); // Optional: redirect to home on logout
   };
 
   const handleUpgrade = async () => {
@@ -42,17 +39,16 @@ export function Header() {
       return;
     }
     try {
-      // Example payment details
       const paymentDetails = {
         upiId: "vidshare@exampleupi",
         recipientName: "VidShare Subscriptions",
-        amount: 299, // Example amount in INR
+        amount: 299, 
         notes: "VidShare Premium Subscription",
       };
       toast({ title: "Processing Payment...", description: "Please wait while we process your UPI payment." });
       const result = await initiateUPIPayment(paymentDetails);
       if (result.status === UPIPaymentStatus.SUCCESS) {
-        setUserRole("paid_user");
+        setUserRole("paid_user", userName || "Premium User"); // Preserve username or set default
         toast({ title: "Payment Successful!", description: "Welcome to VidShare Premium!" });
       } else {
         toast({ variant: "destructive", title: "Payment Failed", description: result.message || "Unable to process payment." });
@@ -104,12 +100,12 @@ export function Header() {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{userName}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {userRole === "paid_user" ? "Premium Member" : "Free Member"}
+                      {userRole === "paid_user" ? "Premium Member" : (userRole === "free_user" ? "Free Member" : "Guest")}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/profile')}> {/* Placeholder for profile page */}
                   <UserCircle className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -127,8 +123,10 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-             <Button variant="outline" onClick={handleLogin}>
-              <LogIn className="mr-2 h-4 w-4" /> Login
+             <Button variant="outline" asChild>
+              <Link href="/login">
+                <LogIn className="mr-2 h-4 w-4" /> Login
+              </Link>
             </Button>
           )}
         </div>
