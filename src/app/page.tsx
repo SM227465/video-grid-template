@@ -9,9 +9,10 @@ import { ListFilter, WifiOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { recommendVideos, RecommendVideosInput } from '@/ai/flows/video-recommendations';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Mock video data
-const mockVideos: Video[] = Array.from({ length: 24 }, (_, i) => ({ // Increased mock data for pagination
+const mockVideos: Video[] = Array.from({ length: 24 }, (_, i) => ({ 
   id: `video${i + 1}`,
   title: `Awesome Video Title ${i + 1} - A Great Adventure`,
   description: `This is a detailed description for Awesome Video Title ${i + 1}. It covers various aspects of the topic and provides valuable insights. Enjoy watching! This content is for demonstration purposes. More details about the video are included to make the description longer. It's a really fantastic video that you will surely enjoy. Learn new things and expand your knowledge. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This is a sample description for video ${i + 1}. We explore exciting topics and share knowledge.`,
@@ -46,12 +47,20 @@ const mockVideos: Video[] = Array.from({ length: 24 }, (_, i) => ({ // Increased
 const VIDEOS_PER_PAGE = 8;
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [allVideos, setAllVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendedVideosList, setRecommendedVideosList] = useState<Video[]>([]);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  const pageFromQuery = parseInt(searchParams.get('page') || '1', 10);
+  const limitFromQuery = parseInt(searchParams.get('limit') || String(VIDEOS_PER_PAGE), 10);
+  const [currentPage, setCurrentPage] = useState(pageFromQuery);
+  const [videosPerPage, setVideosPerPage] = useState(limitFromQuery);
+
 
   const { userRole, isAuthenticated } = useAuth(); 
   const mockUserWatchHistory = ['video1', 'video3']; 
@@ -73,6 +82,11 @@ export default function Home() {
     };
 
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(pageFromQuery);
+    setVideosPerPage(limitFromQuery);
+  }, [pageFromQuery, limitFromQuery]);
 
   useEffect(() => {
     if (isAuthenticated && allVideos.length > 0 && isOnline) {
@@ -106,18 +120,27 @@ export default function Home() {
     }
   };
 
-  const totalPages = Math.ceil(allVideos.length / VIDEOS_PER_PAGE);
+  const totalPages = Math.ceil(allVideos.length / videosPerPage);
   const paginatedVideos = allVideos.slice(
-    (currentPage - 1) * VIDEOS_PER_PAGE,
-    currentPage * VIDEOS_PER_PAGE
+    (currentPage - 1) * videosPerPage,
+    currentPage * videosPerPage
   );
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    router.push(`/?page=${newPage}&limit=${videosPerPage}`);
+  };
+
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1);
+    }
   };
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
   };
 
 
@@ -133,7 +156,7 @@ export default function Home() {
   
   const VideoGridSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      {Array.from({ length: VIDEOS_PER_PAGE }).map((_, index) => (
+      {Array.from({ length: videosPerPage }).map((_, index) => (
         <div key={index} className="flex flex-col space-y-3">
           <Skeleton className="h-[225px] w-full rounded-xl" />
           <div className="space-y-2">
@@ -162,13 +185,13 @@ export default function Home() {
           {isRecommendationsLoading ? (
              <div className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Recommended For You</h2>
-              <VideoGridSkeleton /> {/* Can use a smaller skeleton for recommendations if desired */}
+              <VideoGridSkeleton /> 
             </div>
           ) : recommendedVideosList.length > 0 && (
             <div className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Recommended For You</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {recommendedVideosList.map((video) => (
+                {recommendedVideosList.slice(0,4).map((video) => ( // Show only a few recommendations
                   <VideoCard key={video.id} video={video} />
                 ))}
               </div>
