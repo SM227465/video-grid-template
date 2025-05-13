@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Clapperboard, Search, UserCircle, LogIn, LogOut, Crown, Settings, History as HistoryIcon, CreditCard } from "lucide-react"; // Added icons
+import { Clapperboard, Search, UserCircle, LogIn, LogOut, Crown, Settings, History as HistoryIcon, CreditCard, Briefcase } from "lucide-react"; // Added icons
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ThemeToggleButton } from "./theme-toggle-button";
@@ -18,12 +18,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { initiateUPIPayment, UPIPaymentStatus } from '@/services/upi-payment';
 import { useToast } from "@/hooks/use-toast";
 
 
 export function Header() {
-  const { isAuthenticated, userRole, userName, setUserRole, logout } = useAuth();
+  const { isAuthenticated, userRole, userName, logout } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,29 +38,8 @@ export function Header() {
     router.push('/'); 
   };
 
-  const handleUpgrade = async () => {
-    if (userRole === "paid_user") {
-      toast({ title: "Already Premium", description: "You are already a premium user." });
-      return;
-    }
-    try {
-      const paymentDetails = {
-        upiId: "vidshare@exampleupi",
-        recipientName: "VidShare Subscriptions",
-        amount: 299, 
-        notes: "VidShare Premium Subscription",
-      };
-      toast({ title: "Processing Payment...", description: "Please wait while we process your UPI payment." });
-      const result = await initiateUPIPayment(paymentDetails);
-      if (result.status === UPIPaymentStatus.SUCCESS) {
-        setUserRole("paid_user", userName || "Premium User");
-        toast({ title: "Payment Successful!", description: "Welcome to VidShare Premium!" });
-      } else {
-        toast({ variant: "destructive", title: "Payment Failed", description: result.message || "Unable to process payment." });
-      }
-    } catch (error) {
-       toast({ variant: "destructive", title: "Payment Error", description: "An error occurred during payment." });
-    }
+  const handleNavigateToPlans = () => {
+    router.push('/plans');
   };
 
 
@@ -124,7 +102,7 @@ export function Header() {
                   <span>Watch History</span>
                 </DropdownMenuItem>
                 {userRole !== "paid_user" && (
-                  <DropdownMenuItem onClick={handleUpgrade}>
+                  <DropdownMenuItem onClick={handleNavigateToPlans}>
                     <Crown className="mr-2 h-4 w-4 text-yellow-500" />
                     <span>Upgrade to Premium</span>
                   </DropdownMenuItem>
@@ -132,9 +110,13 @@ export function Header() {
                  {userRole === "paid_user" && (
                   <DropdownMenuItem onClick={() => router.push('/profile?tab=subscription')}>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Subscription</span>
+                    <span>My Subscription</span>
                   </DropdownMenuItem>
                 )}
+                 <DropdownMenuItem onClick={() => router.push('/plans')}>
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    <span>View Plans</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push('/profile?tab=settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>

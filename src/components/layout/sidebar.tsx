@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Home, TrendingUp, Youtube, History, Tags, ShieldCheck, Settings, HelpCircle } from "lucide-react";
+import { Home, TrendingUp, Youtube, History, Tags, ShieldCheck, Settings, HelpCircle, Briefcase } from "lucide-react";
 import {
   Sidebar,
   SidebarHeader,
@@ -16,6 +17,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+
 
 const mainNavLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -36,6 +39,7 @@ const videoQualities = ["1080p", "720p", "480p"];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { userRole } = useAuth();
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r">
@@ -56,6 +60,18 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuItem>
           ))}
+           <SidebarMenuItem>
+              <Link href="/plans" legacyBehavior passHref>
+                <SidebarMenuButton
+                  isActive={pathname === "/plans"}
+                  tooltip={{ children: "Subscription Plans", side: "right", align: "center" }}
+                  className="justify-start"
+                >
+                  <Briefcase className="h-5 w-5" />
+                  <span>{userRole === "paid_user" ? "My Subscription" : "View Plans"}</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
         </SidebarMenu>
 
         <SidebarSeparator />
@@ -103,11 +119,17 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-0 border-t">
         <SidebarMenu className="px-2 py-2">
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip={{ children: "Settings", side: "right", align: "center"}} className="justify-start">
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </SidebarMenuButton>
+           <SidebarMenuItem>
+             <Link href="/profile?tab=settings" legacyBehavior passHref>
+                <SidebarMenuButton 
+                    isActive={pathname === "/profile" && new URLSearchParams(window.location.search).get('tab') === 'settings'}
+                    tooltip={{ children: "Settings", side: "right", align: "center"}} 
+                    className="justify-start"
+                >
+                <Settings className="h-5 w-5" />
+                <span>Settings</span>
+                </SidebarMenuButton>
+              </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip={{ children: "Help", side: "right", align: "center"}} className="justify-start">
@@ -120,3 +142,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+

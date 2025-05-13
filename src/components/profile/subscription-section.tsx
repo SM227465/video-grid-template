@@ -4,13 +4,13 @@
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, Crown, Zap, CheckCircle, XCircle } from 'lucide-react';
+import { ShieldCheck, Crown, Zap, CheckCircle, XCircle, Briefcase } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { initiateUPIPayment, UPIPaymentStatus } from '@/services/upi-payment';
+// import { initiateUPIPayment, UPIPaymentStatus } from '@/services/upi-payment'; // Not needed here anymore
 
 export function SubscriptionSection() {
-  const { userRole, userName, setUserRole } = useAuth();
+  const { userRole, userName, setUserRole } = useAuth(); // setUserRole might not be needed if upgrade happens on /plans
   const router = useRouter();
   const { toast } = useToast();
 
@@ -35,7 +35,7 @@ export function SubscriptionSection() {
       planName: "Premium Plan",
       status: "Active",
       nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(), // Approx. 30 days from now
-      renewalPrice: "$9.99/month",
+      renewalPrice: "$9.99/month", // Example price
       features: [
         { name: "Access to entire video library", included: true },
         { name: "HD/4K quality streaming", included: true },
@@ -45,37 +45,14 @@ export function SubscriptionSection() {
         { name: "Early access to new content", included: true },
         { name: "Priority support", included: true },
       ],
-      price: "$9.99/month",
+      price: "$9.99/month", // Example price
     },
   };
 
   const currentPlan = userRole === "guest" ? null : subscriptionDetails[userRole];
 
-  const handleUpgrade = async () => {
-    if (userRole === "paid_user") {
-      toast({ title: "Already Premium", description: "You are already a premium user." });
-      return;
-    }
-    try {
-      const paymentDetails = {
-        upiId: "vidshare@exampleupi",
-        recipientName: "VidShare Subscriptions",
-        amount: 299, // Corresponds to approx $9.99 or a standard premium price
-        notes: "VidShare Premium Subscription",
-      };
-      toast({ title: "Processing Payment...", description: "Please wait while we process your UPI payment." });
-      const result = await initiateUPIPayment(paymentDetails);
-      if (result.status === UPIPaymentStatus.SUCCESS) {
-        setUserRole("paid_user", userName || "Premium User"); // Update role in AuthContext
-        toast({ title: "Payment Successful!", description: "Welcome to VidShare Premium!" });
-        // Optionally, refresh the page or navigate to reflect changes immediately if needed
-        // router.refresh(); 
-      } else {
-        toast({ variant: "destructive", title: "Payment Failed", description: result.message || "Unable to process payment." });
-      }
-    } catch (error) {
-       toast({ variant: "destructive", title: "Payment Error", description: "An error occurred during payment." });
-    }
+  const handleNavigateToPlans = () => {
+    router.push('/plans');
   };
 
   if (userRole === "guest") {
@@ -89,7 +66,7 @@ export function SubscriptionSection() {
         </CardHeader>
         <CardContent className="text-center py-12">
           <p className="text-lg text-muted-foreground mb-4">Log in or sign up to manage your subscription.</p>
-          <Button onClick={() => router.push('/login')}>Login to View Subscription</Button>
+          <Button onClick={() => router.push('/login?redirect=/profile?tab=subscription')}>Login to View Subscription</Button>
         </CardContent>
       </Card>
     );
@@ -147,15 +124,19 @@ export function SubscriptionSection() {
               Upgrade to Premium!
             </h4>
             <p className="text-muted-foreground mb-4">Unlock ad-free viewing, HD/4K streaming, downloads, and more exclusive content.</p>
-            <Button onClick={handleUpgrade} size="lg">
-              Go Premium
+            <Button onClick={handleNavigateToPlans} size="lg">
+              View Premium Plans
             </Button>
           </div>
         )}
         {userRole === "paid_user" && (
-           <div className="mt-8 flex flex-col sm:flex-row gap-2">
+           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => toast({title: "Not Implemented", description: "Managing payment methods is not yet available."})}>
               Manage Payment Methods
+            </Button>
+             <Button variant="outline" onClick={handleNavigateToPlans}>
+                <Briefcase className="mr-2 h-4 w-4" />
+                View All Plans
             </Button>
             <Button variant="destructive" onClick={() => toast({title: "Not Implemented", description: "Cancelling subscription is not yet available."})}>
               Cancel Subscription
