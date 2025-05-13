@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Clapperboard, Search, UserCircle, LogIn, LogOut, Crown } from "lucide-react";
+import { Clapperboard, Search, UserCircle, LogIn, LogOut, Crown, Settings, History as HistoryIcon, CreditCard } from "lucide-react"; // Added icons
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ThemeToggleButton } from "./theme-toggle-button";
@@ -100,7 +100,7 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={`https://avatar.vercel.sh/${userName?.replace(/\s/g, '') || 'user'}.png`} alt={userName || "User"} />
+                    <AvatarImage src={`https://avatar.vercel.sh/${userName?.replace(/\s/g, '') || 'user'}.png?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`} alt={userName || "User"} />
                     <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -119,12 +119,26 @@ export function Header() {
                   <UserCircle className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => router.push('/profile?tab=history')}>
+                  <HistoryIcon className="mr-2 h-4 w-4" />
+                  <span>Watch History</span>
+                </DropdownMenuItem>
                 {userRole !== "paid_user" && (
                   <DropdownMenuItem onClick={handleUpgrade}>
                     <Crown className="mr-2 h-4 w-4 text-yellow-500" />
                     <span>Upgrade to Premium</span>
                   </DropdownMenuItem>
                 )}
+                 {userRole === "paid_user" && (
+                  <DropdownMenuItem onClick={() => router.push('/profile?tab=subscription')}>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Subscription</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => router.push('/profile?tab=settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
