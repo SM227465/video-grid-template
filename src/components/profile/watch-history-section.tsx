@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { VideoCard } from '@/components/video/video-card'; // Reusing VideoCard for consistent look
 import { History, ListVideo } from 'lucide-react';
-import { Button } from '../ui/button';
-import { useToast } from '../ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 // Using mockVideos similar to HomePageContent for demonstration
 const mockVideosFull: Video[] = Array.from({ length: 24 }, (_, i) => ({ 
@@ -111,3 +111,4 @@ export function WatchHistorySection() {
     </Card>
   );
 }
+
