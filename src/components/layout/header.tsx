@@ -68,8 +68,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className={useContainerAndFullFeatures ? "container flex h-16 items-center justify-between" : "w-full flex h-16 items-center justify-between px-4 md:px-6"}>
-        <div className="flex items-center gap-4">
-          {useContainerAndFullFeatures && <SidebarTrigger className="md:hidden" />}
+        <div className="flex items-center gap-2 md:gap-4"> {/* Adjusted gap for smaller screens */}
+          {useContainerAndFullFeatures && <SidebarTrigger />} {/* Removed md:hidden */}
           <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-xl">
             <Clapperboard className="h-6 w-6 text-primary" />
             <span className="hidden sm:inline">VidShare</span>
@@ -85,9 +85,9 @@ export function Header() {
           </div>
         )}
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3"> {/* Adjusted gap for smaller screens */}
           {useContainerAndFullFeatures && (
-            <div className="md:hidden">
+            <div className="md:hidden"> {/* Keep search button hidden on md and up as input is shown */}
               <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
@@ -142,7 +142,7 @@ export function Header() {
         </div>
       </div>
        {useContainerAndFullFeatures && (
-        <div className="md:hidden px-4 pb-2">
+        <div className="md:hidden px-4 pb-2 border-t md:border-t-0"> {/* Added border for consistency */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input type="search" placeholder="Search videos..." className="pl-10 w-full rounded-full" />
