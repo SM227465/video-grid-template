@@ -1,4 +1,6 @@
 
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Home } from 'lucide-react';
@@ -29,3 +31,4 @@ export default function NotFound() {
     </div>
   );
 }
+
