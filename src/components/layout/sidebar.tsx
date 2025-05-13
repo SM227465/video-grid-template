@@ -15,7 +15,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -39,7 +39,13 @@ const videoQualities = ["1080p", "720p", "480p"];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams(); // Use hook for search params
   const { userRole } = useAuth();
+
+  const isActiveProfileSettings = () => {
+    if (pathname !== "/profile") return false;
+    return searchParams.get('tab') === 'settings';
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r">
@@ -122,7 +128,7 @@ export function AppSidebar() {
            <SidebarMenuItem>
              <Link href="/profile?tab=settings" legacyBehavior passHref>
                 <SidebarMenuButton 
-                    isActive={pathname === "/profile" && new URLSearchParams(window.location.search).get('tab') === 'settings'}
+                    isActive={isActiveProfileSettings()}
                     tooltip={{ children: "Settings", side: "right", align: "center"}} 
                     className="justify-start"
                 >
