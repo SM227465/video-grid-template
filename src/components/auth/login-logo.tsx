@@ -43,7 +43,7 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
     const bodyBGChangedRef = useRef<SVGPathElement>(null);
     const bodyBGNormalPath = "M200,158.5c0-20.2-14.8-36.5-35-36.5h-14.9V72.8c0-27.4-21.7-50.4-49.1-50.8c-28-0.5-50.9,22.1-50.9,50v50 H35.8C16,122,0,138,0,157.8L0,213h200L200,158.5z";
 
-
+    let eyesCovered = false; // Internal state tracking for blinking logic
     let blinkAnimation: gsap.core.Timeline | null = null;
 
     useEffect(() => {
@@ -98,25 +98,24 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
 
     const startBlinking = (delay = 1) => {
       if (blinkAnimation) {
-        blinkAnimation.kill(); // Kill any existing blink
+        blinkAnimation.kill(); 
       }
-      if (!eyeLRef.current || !eyeRRef.current) return;
+      if (!eyeLRef.current || !eyeRRef.current || eyesCovered) return;
 
-      // Ensure eyes are fully open and opaque before starting a new blink cycle's delay
       gsap.set([eyeLRef.current, eyeRRef.current], { scaleY: 1, opacity: 1, transformOrigin: "center center" });
 
       const randomDelay = delay ? Math.random() * delay + 0.5 : 0.5;
 
-      blinkAnimation = gsap.timeline({ delay: randomDelay, onComplete: () => startBlinking(8 + Math.random() * 4) }) // Randomize next blink time
+      blinkAnimation = gsap.timeline({ delay: randomDelay, onComplete: () => startBlinking(8 + Math.random() * 4) }) 
         .to([eyeLRef.current, eyeRRef.current], {
           duration: 0.06,
-          scaleY: 0.05, // Blink closed
+          scaleY: 0.05, 
           ease: "power1.inOut",
           transformOrigin: "center center",
         })
         .to([eyeLRef.current, eyeRRef.current], {
           duration: 0.06,
-          scaleY: 1, // Blink open
+          scaleY: 1, 
           ease: "power1.inOut",
           transformOrigin: "center center",
         });
@@ -136,13 +135,15 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
     };
 
     const coverEyesInternal = () => {
+      eyesCovered = true;
+      if (blinkAnimation) blinkAnimation.kill();
       setArmsUp();
       closeFingersInternal();
-      if (blinkAnimation) blinkAnimation.kill();
       gsap.to([eyeLRef.current, eyeRRef.current], { duration: 0.1, scaleY: 0.05, opacity: 1, transformOrigin: "center center" });
     };
   
     const uncoverEyesInternal = () => {
+      eyesCovered = false;
       gsap.killTweensOf([armLRef.current, armRRef.current, bodyBGRef.current]);
       closeFingersInternal(); 
       gsap.to(armLRef.current, { duration: 0.65, y: 220, rotation: 105, ease: "quad.out" });
@@ -162,16 +163,16 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
         // @ts-ignore
         gsap.to(bodyBGRef.current, { duration: 0.45, morphSVG: bodyBGNormalPath, ease: "quad.out" });
       }
-
-      if (blinkAnimation) blinkAnimation.kill();
+      
       gsap.set([eyeLRef.current, eyeRRef.current], { scaleY: 1, opacity: 1, x:0, y:0 });
       startBlinking(0.5);
     };
 
     const peekInternal = () => {
+      eyesCovered = true; // Still "covered" in a sense, but peeking
+      if (blinkAnimation) blinkAnimation.kill();
       setArmsUp();
       spreadFingersInternal();
-      if (blinkAnimation) blinkAnimation.kill();
       gsap.fromTo([eyeLRef.current, eyeRRef.current],
         { scaleY: 0.1, opacity: 1 }, 
         { duration: 0.2, scaleY: 1, opacity: 1, transformOrigin: "center center", ease: "power1.out" }
@@ -208,14 +209,14 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
             targetMouthShapeRef = mouthSmallBGRef.current;
         } else if (value.includes('@')) {
             targetMouthShapeRef = mouthLargeBGRef.current;
-            if (blinkAnimation) blinkAnimation.kill(); // Pause blinking for this effect
+            if (blinkAnimation) blinkAnimation.kill(); 
             gsap.to([eyeLRef.current, eyeRRef.current], {
               duration: 0.2, 
-              scale: 1.2, // scaleX and scaleY
+              scale: 1.2, 
               yoyo:true, 
               repeat: 1, 
               transformOrigin: "center center",
-              onComplete: () => { if (!eyesCovered) startBlinking(0.1); } // Resume blinking quickly if not covered
+              onComplete: () => { if (!eyesCovered) startBlinking(0.1); } 
             });
         } else {
             targetMouthShapeRef = mouthMediumBGRef.current;
@@ -225,15 +226,17 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
     };
 
     const animateEyesFollow = (fieldType: 'email' | 'password', value: string) => {
-        if (!eyeLRef.current || !eyeRRef.current) return;
+        if (!eyeLRef.current || !eyeRRef.current || eyesCovered) return;
 
         let eyeMoveX = 0;
         const maxMoveX = 5; 
-        const inputLengthFactor = Math.min(value.length / 15, 1); 
-        eyeMoveX = -maxMoveX + (inputLengthFactor * maxMoveX * 1.5); // Adjusted multiplier for more rightward movement
-        eyeMoveX = Math.max(-maxMoveX, Math.min(eyeMoveX, maxMoveX / 2)); // Cap left and allow less right
+        // Start eyes looking slightly left (-maxMoveX / 2), then move towards right (maxMoveX / 2)
+        // The range of movement is maxMoveX.
+        const inputProgress = Math.min(value.length / 15, 1); // Normalize progress, full effect at 15 chars
+        eyeMoveX = (-maxMoveX / 2) + (inputProgress * maxMoveX) ;
 
-        const moveY = fieldType === 'email' ? -1 : 1; 
+
+        const moveY = fieldType === 'email' ? -1 : 1; // Keep subtle up/down based on field type
         gsap.to([eyeLRef.current, eyeRRef.current], { duration: 0.5, x: eyeMoveX, y:moveY, ease: "sine.out" });
     };
 
@@ -245,7 +248,7 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
         }
       },
       handleInputBlur: (fieldType) => {
-        if (fieldType === 'email') {
+        if (fieldType === 'email' && !eyesCovered) {
             gsap.to([eyeLRef.current, eyeRRef.current], { duration: 0.3, x: 0, y:0, ease: "sine.out" });
         }
       },
@@ -359,4 +362,8 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
             </svg>
         </div>
     </div>
-</form>
+    );
+});
+
+export default LoginLogo;
+
