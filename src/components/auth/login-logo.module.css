@@ -1,22 +1,35 @@
-/* Placeholder styles for LoginLogo - Populate with actual styles for the animation */
+
+/* colors */
+/*
+$darkBlue: #217093;
+$medBlue: #4eb8dd;
+$lightBlue: #ddf1fa;
+$inputBG: #f3fafd;
+*/
+
 .svgContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 200px; /* Example width */
-    height: 200px; /* Example height */
-    margin: auto; /* Center the container */
+	position: relative; width: 200px; height: 200px; margin: 0 auto 1em;
+	border-radius: 50%;
+	pointer-events: none;
 }
-
+.svgContainer div { /* This was for a nested div structure in original HTML, might not be needed if SVG is direct child */
+	position: relative; width: 100%; height: 0; overflow: hidden; border-radius: 50%;
+	padding-bottom: 100%;
+}
 .mySVG {
-    width: 100%;
-    height: 100%;
+	position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+	pointer-events: none;
+}
+.svgContainer:after { /* This was for an outer border, might conflict with ShadCN card styling */
+	/* content: ""; position: absolute; top: 0; left: 0; z-index: 10; 
+	width: inherit; height: inherit; box-sizing: border-box;
+	border: solid 2.5px #217093; border-radius: 50%; */
 }
 
-/* Add other classes used in the SVG if they need specific base styles */
+/* SVG Element Styles */
 .body {}
-.bodyBGchanged {}
-.bodyBGnormal {}
+.bodyBGchanged {} /* Path definition for changed state, GSAP will morph to this 'd' attribute */
+.bodyBGnormal {} /* Path definition for normal state */
 .earL {}
 .outerEar {}
 .earHair {}
@@ -28,33 +41,24 @@
 .eyeL {}
 .eyeR {}
 .mouth {}
-.mouthBG {}
-.mouthSmallBG {}
-.mouthMediumBG {}
-.mouthLargeBG {}
-.mouthMaskPath {} /* This might be an ID for <defs> */
-.mouthOutline {}
+.mouthBG {} /* This was the path that got its 'd' attribute changed by GSAP directly */
+.mouthSmallBG {} /* Target shape for morphing */
+.mouthMediumBG {} /* Target shape for morphing */
+.mouthLargeBG {} /* Target shape for morphing */
+/* #mouthMaskPathDefToMorph is an ID in defs, its 'd' attribute is morphed for the clipPath */
+.mouthOutline {} /* Static visible outline */
 .tongue {}
 .tongueHighlight {}
 .tooth {}
 .nose {}
 .arms {}
 .armL {}
-.twoFingers {}
+.twoFingers {} /* This group will be animated (rotated, moved) for peeking */
 .armR {}
 
-/* Styles for the form elements if they were part of this component */
-/*
-.inputGroup {
-    margin-bottom: 1rem;
-}
-.inputGroup1 {}
-.helper {
-    font-size: 0.8rem;
-    color: #666;
-}
-.helper1 {}
-.inputGroup2 {}
-.indicator {}
-.inputGroup3 {}
+/* 
+  The original CSS also had styles for .inputGroup, label, input, button etc.
+  These are not included here as those form elements are part of LoginForm.tsx
+  and styled by Tailwind/ShadCN. Only styles directly related to the SVG animation
+  are included here.
 */
