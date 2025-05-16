@@ -1,0 +1,60 @@
+/* Placeholder styles for LoginLogo - Populate with actual styles for the animation */
+.svgContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 200px; /* Example width */
+    height: 200px; /* Example height */
+    margin: auto; /* Center the container */
+}
+
+.mySVG {
+    width: 100%;
+    height: 100%;
+}
+
+/* Add other classes used in the SVG if they need specific base styles */
+.body {}
+.bodyBGchanged {}
+.bodyBGnormal {}
+.earL {}
+.outerEar {}
+.earHair {}
+.earR {}
+.chin {}
+.face {}
+.hair {}
+.eyebrow {}
+.eyeL {}
+.eyeR {}
+.mouth {}
+.mouthBG {}
+.mouthSmallBG {}
+.mouthMediumBG {}
+.mouthLargeBG {}
+.mouthMaskPath {} /* This might be an ID for <defs> */
+.mouthOutline {}
+.tongue {}
+.tongueHighlight {}
+.tooth {}
+.nose {}
+.arms {}
+.armL {}
+.twoFingers {}
+.armR {}
+
+/* Styles for the form elements if they were part of this component */
+/*
+.inputGroup {
+    margin-bottom: 1rem;
+}
+.inputGroup1 {}
+.helper {
+    font-size: 0.8rem;
+    color: #666;
+}
+.helper1 {}
+.inputGroup2 {}
+.indicator {}
+.inputGroup3 {}
+*/
