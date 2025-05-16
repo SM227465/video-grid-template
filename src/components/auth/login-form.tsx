@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import React, { forwardRef, useImperativeHandle } from 'react'; // Added forwardRef and useImperativeHandle
+import React, { forwardRef, useImperativeHandle, useState } from 'react'; // Added useState
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, LogIn as LogInIcon } from "lucide-react";
+import { Mail, Lock, LogIn as LogInIcon, Eye, EyeOff } from "lucide-react"; // Added Eye, EyeOff
 import { useToast } from "@/hooks/use-toast";
 
 const loginFormSchema = z.object({
@@ -33,18 +33,26 @@ interface LoginFormProps {
   onEmailChange?: (value: string) => void;
   onPasswordFocus?: () => void;
   onPasswordBlur?: () => void;
+  onPasswordVisibilityChange?: (isVisible: boolean) => void; // New prop
 }
 
-// If LoginForm needs to expose any methods to its parent (LoginPage)
 export interface LoginFormActionHandles {
   // Example: clearForm: () => void;
 }
 
 export const LoginForm = forwardRef<LoginFormActionHandles, LoginFormProps>(
-  ({ onEmailFocus, onEmailBlur, onEmailChange, onPasswordFocus, onPasswordBlur }, ref) => {
+  ({ 
+    onEmailFocus, 
+    onEmailBlur, 
+    onEmailChange, 
+    onPasswordFocus, 
+    onPasswordBlur,
+    onPasswordVisibilityChange 
+  }, ref) => {
     const { setUserRole } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const [showPassword, setShowPassword] = useState(false); // State for password visibility
 
     const form = useForm<LoginFormValues>({
       resolver: zodResolver(loginFormSchema),
@@ -54,10 +62,15 @@ export const LoginForm = forwardRef<LoginFormActionHandles, LoginFormProps>(
       },
     });
 
-    // Expose any imperative handles if needed by parent
     useImperativeHandle(ref, () => ({
       // clearForm: () => form.reset(),
     }));
+
+    const togglePasswordVisibility = () => {
+      const newVisibility = !showPassword;
+      setShowPassword(newVisibility);
+      onPasswordVisibilityChange?.(newVisibility);
+    };
 
     const onSubmit = (data: LoginFormValues) => {
       const username = data.email.split('@')[0];
@@ -104,15 +117,28 @@ export const LoginForm = forwardRef<LoginFormActionHandles, LoginFormProps>(
                 <FormLabel className="flex items-center">
                   <Lock className="mr-2 h-4 w-4 text-muted-foreground" /> Password
                 </FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    {...field}
-                    onFocus={onPasswordFocus}
-                    onBlur={onPasswordBlur}
-                  />
-                </FormControl>
+                <div className="relative">
+                  <FormControl>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      {...field}
+                      onFocus={onPasswordFocus}
+                      onBlur={onPasswordBlur}
+                      className="pr-10" // Add padding to make space for the icon
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}

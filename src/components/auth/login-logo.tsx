@@ -16,29 +16,12 @@ if (typeof window !== 'undefined' && window.MorphSVGPlugin) {
 
 import styles from './login-logo.module.css';
 
-// Helper function (not used in current animation logic directly but kept from original)
-// const getPosition = (el: HTMLElement | null) => {
-//   let xPos = 0;
-//   let yPos = 0;
-//   while (el) {
-//     if (el.tagName === "BODY") {
-//       const xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-//       const yScroll = el.scrollTop || document.documentElement.scrollTop;
-//       xPos += el.offsetLeft - xScroll + el.clientLeft;
-//       yPos += el.offsetTop - yScroll + el.clientTop;
-//     } else {
-//       xPos += el.offsetLeft - el.scrollLeft + el.clientLeft;
-//       yPos += el.offsetTop - el.scrollTop + el.clientTop;
-//     }
-//     el = el.offsetParent as HTMLElement;
-//   }
-//   return { x: xPos, y: yPos };
-// };
-
 export interface LoginLogoHandles {
   handleInputFocus: (fieldType: 'email' | 'password') => void;
   handleInputBlur: (fieldType: 'email' | 'password') => void;
   handleInputChange: (fieldType: 'email' | 'password', value: string) => void;
+  coverEyes: () => void;     // Expose coverEyes
+  uncoverEyes: () => void;   // Expose uncoverEyes
 }
 
 const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
@@ -50,13 +33,9 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
     const mouthSmallBGRef = useRef<SVGPathElement>(null);
     const mouthMediumBGRef = useRef<SVGPathElement>(null);
     const mouthLargeBGRef = useRef<SVGPathElement>(null);
-    const mouthMaskPathRef = useRef<SVGPathElement>(null); // For <defs><path id="mouthMaskPathDef">
-    // const toothRef = useRef<SVGPathElement>(null);
-    // const tongueRef = useRef<SVGGElement>(null);
+    const mouthMaskPathRef = useRef<SVGPathElement>(null);
     const armLRef = useRef<SVGGElement>(null);
     const armRRef = useRef<SVGGElement>(null);
-
-    // const [eyesCovered, setEyesCovered] = useState(false); // State to track if eyes are covered
 
     useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -73,18 +52,16 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
       gsap.set(armRRef.current, { x: -93, y: 220, rotation: -105, transformOrigin: "top right", visibility: 'hidden' });
       gsap.set(mouthRef.current, { transformOrigin: "center center" });
       
-      // Ensure only small mouth is visible initially if MorphSVG is not used for this
       if (mouthSmallBGRef.current) mouthSmallBGRef.current.style.display = 'block';
       if (mouthMediumBGRef.current) mouthMediumBGRef.current.style.display = 'none';
       if (mouthLargeBGRef.current) mouthLargeBGRef.current.style.display = 'none';
       if (mouthMaskPathRef.current && mouthSmallBGRef.current) {
-         // @ts-ignore
+        // @ts-ignore
         if (gsap.MorphSVGPlugin) {
             // @ts-ignore
             gsap.set(mouthMaskPathRef.current, { morphSVG: mouthSmallBGRef.current });
         }
       }
-
     };
 
     const startBlinking = (delay = 1) => {
@@ -101,34 +78,34 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
       });
     };
 
-    const coverEyes = () => {
+    const coverEyesInternal = () => {
       if(!armLRef.current || !armRRef.current) return;
-      gsap.killTweensOf([armLRef.current, armRRef.current]);
+      gsap.killTweensOf([armLRef.current, armRRef.current]); // Kill existing arm animations
       gsap.set([armLRef.current, armRRef.current], { visibility: "visible" });
-      
       gsap.to(armLRef.current, { duration: 0.45, x: -93, y: 10, rotation: 0, ease: "power2.out" });
       gsap.to(armRRef.current, { duration: 0.45, x: -93, y: 10, rotation: 0, ease: "power2.out", delay: 0.1 });
-      // setEyesCovered(true);
     };
   
-    const uncoverEyes = () => {
+    const uncoverEyesInternal = () => {
       if(!armLRef.current || !armRRef.current) return;
-      gsap.killTweensOf([armLRef.current, armRRef.current]);
-      
+      gsap.killTweensOf([armLRef.current, armRRef.current]); // Kill existing arm animations
       gsap.to(armLRef.current, { duration: 0.65, y: 220, rotation: 105, ease: "power2.out" });
-      gsap.to(armRRef.current, { duration: 0.65, y: 220, rotation: -105, ease: "power2.out", delay: 0.1, 
+      gsap.to(armRRef.current, { 
+        duration: 0.65, 
+        y: 220, 
+        rotation: -105, 
+        ease: "power2.out", 
+        delay: 0.1, 
         onComplete: () => {
           gsap.set([armLRef.current, armRRef.current], { visibility: "hidden" });
         }
       });
-      // setEyesCovered(false);
     };
 
     const animateMouth = (value: string) => {
         if (!mouthMaskPathRef.current || !mouthSmallBGRef.current || !mouthMediumBGRef.current || !mouthLargeBGRef.current) return;
         // @ts-ignore
         if (!gsap.MorphSVGPlugin) {
-            // Fallback if MorphSVGPlugin is not available
             if (value.length === 0) {
                 if (mouthSmallBGRef.current) mouthSmallBGRef.current.style.display = 'block';
                 if (mouthMediumBGRef.current) mouthMediumBGRef.current.style.display = 'none';
@@ -160,27 +137,23 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
 
     const animateEyesFollow = (fieldType: 'email' | 'password', value: string) => {
         if (!eyeLRef.current || !eyeRRef.current) return;
-        // Simple animation: move eyes slightly based on text length
-        const moveX = Math.min(value.length, 10) * 0.5 - 2.5; // Max move 2.5px
-        const moveY = fieldType === 'email' ? -1 : 1; // Slightly up for email, down for password
+        const moveX = Math.min(value.length, 10) * 0.5 - 2.5; 
+        const moveY = fieldType === 'email' ? -1 : 1; 
         gsap.to([eyeLRef.current, eyeRRef.current], { duration: 0.5, x: moveX, y:moveY, ease: "sine.out" });
     };
-
 
     useImperativeHandle(ref, () => ({
       handleInputFocus: (fieldType) => {
         if (fieldType === 'password') {
-          coverEyes();
+          coverEyesInternal();
         } else {
-            // Optional: animation for email focus
-             animateEyesFollow(fieldType, ""); // Reset eye position or initial focus animation
+            animateEyesFollow(fieldType, ""); 
         }
       },
       handleInputBlur: (fieldType) => {
         if (fieldType === 'password') {
-          uncoverEyes();
+          uncoverEyesInternal();
         }
-        // Reset eye positions on blur
         gsap.to([eyeLRef.current, eyeRRef.current], { duration: 0.3, x: 0, y:0, ease: "sine.out" });
       },
       handleInputChange: (fieldType, value) => {
@@ -188,8 +161,9 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
           animateMouth(value);
           animateEyesFollow(fieldType, value);
         }
-        // Password input change doesn't usually have visual feedback other than covered eyes
-      }
+      },
+      coverEyes: coverEyesInternal,     // Expose internal function
+      uncoverEyes: uncoverEyesInternal  // Expose internal function
     }));
 
     return (
@@ -198,7 +172,6 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
             <svg ref={svgRef} className={styles.mySVG} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200">
                 <defs>
                     <circle id="armMaskPathCircleDef" cx="100" cy="100" r="100" />
-                     {/* Mouth shapes for morphing */}
                     <path ref={mouthSmallBGRef} id="mouthSmallBGDef" fill="#617E92" d="M100.2,101c-0.4,0-1.4,0-1.8,0c-2.7-0.3-5.3-1.1-8-2.5c-0.7-0.3-0.9-1.2-0.6-1.8 c0.2-0.5,0.7-0.7,1.2-0.7c0.2,0,0.5,0.1,0.6,0.2c3,1.5,5.8,2.3,8.6,2.3s5.7-0.7,8.6-2.3c0.2-0.1,0.4-0.2,0.6-0.2 c0.5,0,1,0.3,1.2,0.7c0.4,0.7,0.1,1.5-0.6,1.9c-2.6,1.4-5.3,2.2-7.9,2.5C101.7,101,100.5,101,100.2,101z" />
                     <path ref={mouthMediumBGRef} id="mouthMediumBGDef" d="M95,104.2c-4.5,0-8.2-3.7-8.2-8.2v-2c0-1.2,1-2.2,2.2-2.2h22c1.2,0,2.2,1,2.2,2.2v2 c0,4.5-3.7,8.2-8.2,8.2H95z" />
                     <path ref={mouthLargeBGRef} id="mouthLargeBGDef" d="M100 110.2c-9 0-16.2-7.3-16.2-16.2 0-2.3 1.9-4.2 4.2-4.2h24c2.3 0 4.2 1.9 4.2 4.2 0 9-7.2 16.2-16.2 16.2z" fill="#617e92" stroke="#3a5e77" strokeLinejoin="round" strokeWidth="2.5" />
@@ -249,11 +222,9 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
                     <circle cx="113" cy="76" r="1" fill="#fff" />
                 </g>
                 <g className={styles.mouth} ref={mouthRef}>
-                    {/* This path is now dynamically controlled by morphSVG or display none/block if morph is not available */}
                     <path ref={mouthBGRef} className={styles.mouthBG} fill="#617E92" d="M100.2,101c-0.4,0-1.4,0-1.8,0c-2.7-0.3-5.3-1.1-8-2.5c-0.7-0.3-0.9-1.2-0.6-1.8 c0.2-0.5,0.7-0.7,1.2-0.7c0.2,0,0.5,0.1,0.6,0.2c3,1.5,5.8,2.3,8.6,2.3s5.7-0.7,8.6-2.3c0.2-0.1,0.4-0.2,0.6-0.2 c0.5,0,1,0.3,1.2,0.7c0.4,0.7,0.1,1.5-0.6,1.9c-2.6,1.4-5.3,2.2-7.9,2.5C101.7,101,100.5,101,100.2,101z" />
 
                     <clipPath id="mouthClipPath">
-                         {/* Use the dynamically morphing path from defs */}
                         <use href="#mouthMaskPathDef" overflow="visible" />
                     </clipPath>
                     <g clipPath="url(#mouthClipPath)">
@@ -263,7 +234,6 @@ const LoginLogo = forwardRef<LoginLogoHandles, {}>((props, ref) => {
                         </g>
                     </g>
                     <path clipPath="url(#mouthClipPath)" className={styles.tooth} style={{ fill: '#FFFFFF' }} d="M106,97h-4c-1.1,0-2-0.9-2-2v-2h8v2C108,96.1,107.1,97,106,97z" />
-                    {/* The outline path should also morph or be the largest possible outline if not morphing */}
                     <path className={styles.mouthOutline} fill="none" stroke="#3A5E77" strokeWidth="2.5" strokeLinejoin="round" d="M100.2,101c-0.4,0-1.4,0-1.8,0c-2.7-0.3-5.3-1.1-8-2.5c-0.7-0.3-0.9-1.2-0.6-1.8 c0.2-0.5,0.7-0.7,1.2-0.7c0.2,0,0.5,0.1,0.6,0.2c3,1.5,5.8,2.3,8.6,2.3s5.7-0.7,8.6-2.3c0.2-0.1,0.4-0.2,0.6-0.2 c0.5,0,1,0.3,1.2,0.7c0.4,0.7,0.1,1.5-0.6,1.9c-2.6,1.4-5.3,2.2-7.9,2.5C101.7,101,100.5,101,100.2,101z" />
                 </g>
                 <path className={styles.nose} d="M97.7 79.9h4.7c1.9 0 3 2.2 1.9 3.7l-2.3 3.3c-.9 1.3-2.9 1.3-3.8 0l-2.3-3.3c-1.3-1.6-.2-3.7 1.8-3.7z" fill="#3a5e77" />
